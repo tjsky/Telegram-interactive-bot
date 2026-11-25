@@ -1,0 +1,7 @@
+# git archive（发布包）里只放运行需要的文件
+.github/        export-ignore
+.vscode/        export-ignore
+doc/            export-ignore
+.gitignore      export-ignore
+.gitattributes  export-ignore
+README.en.md    export-ignore

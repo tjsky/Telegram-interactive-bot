@@ -34,6 +34,9 @@ MANIFEST
 
 # Installer logs
 pip-log.txt
+
+# 引擎自测（python interactive-bot/captcha_engine.py）产出的样张
+interactive-bot/preview/
 pip-delete-this-directory.txt
 
 # Unit test / coverage reports
@@ -162,3 +165,15 @@ cython_debug/
 #.idea/
 
 .env
+# 运行时数据（含用户消息映射与验证状态，不要提交）
+assets/*.db
+assets/*.db-wal
+assets/*.db-shm
+assets/*.sqlite3
+assets/*.sqlite3-wal
+assets/*.sqlite3-shm
+assets/*.pickle
+log.txt
+
+# 引擎自测（python interactive-bot/captcha_engine.py）产出的样张
+interactive-bot/preview/

@@ -1,0 +1,18 @@
+# 不要把密钥和运行时数据打进镜像
+.git
+.github/
+.gitignore
+.env
+*.pyc
+__pycache__/
+assets/*.db
+assets/*.db-wal
+assets/*.db-shm
+assets/*.sqlite3
+assets/*.sqlite3-wal
+assets/*.sqlite3-shm
+assets/*.pickle
+log.txt
+interactive-bot/preview/
+.vscode/
+doc/

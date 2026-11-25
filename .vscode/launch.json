@@ -10,10 +10,7 @@
             "request": "launch",
             "module": "interactive-bot",
             "console": "integratedTerminal",
-            "justMyCode": true,
-            "env": {
-                "https_proxy": "http://127.0.0.1:10809"
-            }
+            "justMyCode": true
         }
     ]
 }

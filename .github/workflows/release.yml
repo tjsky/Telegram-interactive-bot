@@ -1,0 +1,57 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 已推送的 tag，例如 v1.0.0
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ github.event.inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref_name }}
+          fetch-depth: 0
+
+      - name: 打包
+        run: |
+          set -euo pipefail
+          NAME="telegram-interactive-bot-$VERSION"
+          mkdir -p dist
+          git archive --format=zip --prefix="$NAME/" -o "dist/$NAME.zip" HEAD
+          git archive --format=tar.gz --prefix="$NAME/" -o "dist/$NAME.tar.gz" HEAD
+          cd dist && sha256sum telegram-interactive-bot-*.zip telegram-interactive-bot-*.tar.gz > SHA256SUMS
+
+      - name: 校验发布包
+        run: |
+          set -euo pipefail
+          NAME="telegram-interactive-bot-$VERSION"
+          LIST="$(unzip -l "dist/$NAME.zip")"
+          for f in interactive-bot/__main__.py interactive-bot/captcha_engine.py \
+                   db/model.py fonts/Inter-Bold.otf requirements.txt .env_example \
+                   DEPLOY.md dockerfile .dockerignore; do
+            echo "$LIST" | grep -q " $NAME/$f" || { echo "发布包缺少 $f"; exit 1; }
+          done
+          if echo "$LIST" | grep -Eq "\.git/|/\.env$|log\.txt|\.github/|README\.en\.md"; then
+            echo "发布包混进了不该发的文件"; exit 1
+          fi
+
+      - name: 创建 Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$VERSION" \
+            "dist/telegram-interactive-bot-$VERSION.zip" \
+            "dist/telegram-interactive-bot-$VERSION.tar.gz" \
+            "dist/SHA256SUMS" \
+            --title "$VERSION" --generate-notes --verify-tag
