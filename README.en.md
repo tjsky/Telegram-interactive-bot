@@ -1,88 +1,98 @@
-# Telegram interactive bot (Telegram Bidirectional Bot)
+# Telegram Two-Way Private Chat Bot
 
-## 0. Break, A friend of mine has developed a free platform of this kind of bot
-### Key Features of the Hosted Version
+A private chat relay: a visitor messages the bot, the message lands in a topic of its own in
+the admin group, and an admin replying in that topic sends a message back to the visitor.
+Ships with human verification, spam filtering and rate limiting.
 
-- **Privacy-First Design** – Fully compliant with the Telegram API. Pure message forwarding only — no data is ever stored!
-- **Anti-Spam Protection** – Smart abuse prevention to keep both customers and support agents safe from spam and unwanted messages.
-- **Group Chat Integration** – Seamlessly forward chats to support groups for clear, organized message handling. Great for teams with multiple agents.
-- **Lightning-Fast Response** – Powered by AWS global infrastructure with millisecond-level latency and 99.98% uptime.
-- **Full Message Support** – Handles every type of Telegram message, no exceptions.
-- **Totally Free to Use** – Core two-way customer support features are 100% free for life!
+Modified from [MiHaKun/Telegram-interactive-bot](https://github.com/MiHaKun/Telegram-interactive-bot)
+to stop the constant ads and userbot spam.
 
-**Give it a try:** @FriesOfficialBot  
-https://t.me/FriesOfficialBot
+## Features
 
-## I. Introduction
+- Relay: text, photo, video, document, voice and albums forwarded as-is, with reply support
+- One topic per visitor, titled with a sanitised display name; deleting the topic closes the conversation
+- Human verification: 6-character image captcha, answer never stored; the same answer sent to
+  several accounts is treated as mass solving
+- Spam filtering: normalise → fingerprint → cross-account duplicates → keywords; hits are dropped
+  silently and summarised once a day at 09:00
+- Rate limiting: token bucket plus quota; an album counts as one message
+- Commands: `/help` `/privacy` `/stop` `/start`
 
-An open-source bidirectional bot for Telegram. It helps to avoid spam messages and allows restricted clients to contact you smoothly.
+## Requirements
 
-[中文文档](https://github.com/MiHaKun/Telegram-interactive-bot/blob/master/README.md) | [Sample Bot](https://t.me/CustomerConnectBot) | [Sample Backend](https://t.me/MiHaCMSGroup)
+- Python 3.10 or later (3.10–3.13)
+- A Telegram bot, token from @BotFather
+- A group with Topics enabled as the admin backend; add the bot as an admin with permission to
+  manage topics
 
-(Note: After interacting with the sample bot, check the background to understand the principle.)
+## Install
 
-(Note: The sample background is a public group for demonstration purposes. For private deployment, it's recommended to use a private group for security reasons.)
+Download `telegram-interactive-bot-<version>.zip` from
+[Releases](https://github.com/tjsky/Telegram-interactive-bot/releases), unzip, then:
 
-![image-20240708130408336](./doc/cn/image-20240708130408336.png)
-
-### Features
-- When a client contacts customer service through the bot, all messages will be completely forwarded to the background management group, creating a separate sub-forum named after the client's information to distinguish them from other clients.
-- Replies from customer service in the sub-forum can be directly sent to the client.
-- Customer service can configure whether to continue the conversation with the client by closing/opening the sub-forum.
-- Provides a permanent ban solution. There is a switch in the environment variables.
-- Provides a /clear command to clear all messages in the sub-forum, also deleting user messages (not recommended, but sometimes necessary). There is a switch in the environment variables.
-
-### Advantages
-- By using sub-forums, multiple management members can be added to share the customer service workload.
-- Complete communication records with clients can be intuitively retained.
-- It's possible to know which customer service representative replied to a particular message, maintaining coherent customer service.
-
-## 2. Preparation
-The main principle of this bot is to forward the conversation between the client and the bot to a group (preferably a private group) and categorize each client's messages into a sub-category. Therefore, before starting, you need to:
-1. Find @BotFather and apply for a bot.
-2. Obtain the bot's token.
-3. Create a group (set as public as needed).
-4. Enable "Topics" in the group.
-5. Add your bot to the group and promote it to an administrator.
-6. Remember to include "Message Management" and "Topic Management" in the administrative permissions.
-7. Use the bot @GetTheirIDBot to obtain the built-in ID of the group and the user ID of the administrator.
-8. Use the bot @GetTheirIDBot to get the built-in ID and administrator user ID of the group.
-
-   ![image-20240703082929589](./doc/en/image-20240703083738158.png)![image-20240703083040852](./doc/en/image-20240703083634098.png)
-
-## 3. Deployment and Execution
-
-### 1. Modify .env
-Open `.env_example`, fill in your bot's Token, account's API_ID/HASH, the management group's ID, and the administrator's ID. Save `.env_example` as `.env`.
-
-### 2. Build Python venv
-```
-python3 -m venv venv
-. venv/bin/activate
+```bash
+python3 -m venv .venv
+. .venv/bin/activate
 pip install -r requirements.txt
-```
-
-### 3. Start Execution
-```
+cp .env_example .env
+vi .env                       # at minimum BOT_TOKEN, APP_NAME, ADMIN_GROUP_ID, ADMIN_USER_IDS
 python -m interactive-bot
 ```
 
-**Note:** For formal operation, it's recommended to use process management tools like `PM2`, `supervisor`, etc., along with watchdogs to achieve uninterrupted operation, automatic restart, and failure recovery.
+`启动 <APP_NAME> | pid=...` in the log means it started. `Ctrl+C` to stop.
 
-# ToDoList
-- [x] Support message reply functionality. Messages can reference each other.
-- [x] Improve the database.
-- [x] Add client's human-machine recognition to prevent bored individuals from using userbots to spam.
-- [x] Add and recognize media group messages.
-- [x] Streamline the code, use payload to expand forwarding parameters.
+## Required configuration
 
-# About
+| Variable | Description |
+|---|---|
+| `BOT_TOKEN` | Token from @BotFather |
+| `APP_NAME` | Used for the log and pickle file names, pick anything |
+| `ADMIN_GROUP_ID` | Admin group ID, starts with `-100` |
+| `ADMIN_USER_IDS` | Admin numeric IDs, comma separated; only these accounts can use admin commands |
+| `BOT_TIMEZONE` | Timezone for scheduled jobs, default `Asia/Shanghai` |
 
-- This product is open-source under the Apache License.
-- The author, MiHa (@MrMiHa), is a struggling programmer, not a coal miner. If you have questions, please don't come and give orders.
-- Discussion group: https://t.me/DeveloperTeamGroup. Feel free to join and play around.
-- Feel free to fork, but remember to retain the content in "About".
-- The initial version was written in 2 hours. If you like it, please donate. If you have trouble deploying, ask for help in the group.
-- RackNerd's servers are recommended. In fact, I use this one. It's cheap enough.
-This one is enough: [2 cores 3GB - $27 per year](https://my.racknerd.com/aff.php?aff=11705&pid=828)
-- If you can't deploy it, you can ask everyone in the group to help. You can also share servers with everyone: https://t.me/DeveloperTeamGroup.
+Group and user IDs are available from @GetTheirIDBot.
+Every other switch is commented in `.env_example`; per-item details are in [`DEPLOY.md`](DEPLOY.md).
+
+## Commands
+
+Visitor:
+
+| Command | Action |
+|---|---|
+| `/start` | Start, also resumes after `/stop` |
+| `/help` | Usage |
+| `/privacy` | What is stored and for how long |
+| `/stop` | Stop receiving; nothing is forwarded until `/start` |
+
+Admin, used in the admin group:
+
+| Command | Action |
+|---|---|
+| `/clear` | Send inside a topic: closes the conversation and deletes the topic |
+| `/broadcast` | Reply to a message and send: broadcasts it to all users |
+| `/release_user <ID>` | Lifts the verification cooldown and clears filtering records |
+
+Deleting a topic is the same as closing the conversation with that user; with
+`DELETE_TOPIC_AS_FOREVER_BAN=TRUE` it also permanently bans them.
+
+## Data
+
+| Path | Contents |
+|---|---|
+| `assets/db.sqlite3` | Users, topic mapping, message mapping |
+| `assets/spam.db` | Spam fingerprints and block records |
+| `assets/captcha.db` | Verification state |
+| `assets/<APP_NAME>.pickle` | Conversation state |
+| `log.txt` | Log, rotated at 10MB × 3 |
+
+Backing up `assets/` is enough.
+
+## Running long-term
+
+systemd and Docker instructions are in [`DEPLOY.md`](DEPLOY.md).
+
+## License
+
+Apache License 2.0, see [LICENSE](LICENSE).
+Modified from [MiHaKun/Telegram-interactive-bot](https://github.com/MiHaKun/Telegram-interactive-bot).
