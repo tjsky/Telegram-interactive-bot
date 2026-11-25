@@ -46,6 +46,37 @@ jobs:
             echo "发布包混进了不该发的文件"; exit 1
           fi
 
+      - name: 生成说明
+        run: |
+          set -euo pipefail
+          PREV="$(git describe --tags --abbrev=0 "$VERSION^" 2>/dev/null || true)"
+          {
+            echo "## 安装"
+            echo
+            echo "下载 \`telegram-interactive-bot-$VERSION.zip\`，解压后："
+            echo
+            echo '```bash'
+            echo "python3 -m venv .venv && . .venv/bin/activate"
+            echo "pip install -r requirements.txt"
+            echo "cp .env_example .env       # 填 BOT_TOKEN、APP_NAME、ADMIN_GROUP_ID、ADMIN_USER_IDS"
+            echo "python -m interactive-bot"
+            echo '```'
+            echo
+            echo "完整步骤见包内 \`DEPLOY.md\`。"
+            echo
+            echo "## 校验"
+            echo
+            echo '```bash'
+            echo "sha256sum -c SHA256SUMS"
+            echo '```'
+            if [ -n "$PREV" ]; then
+              echo
+              echo "## 变更"
+              echo
+              echo "完整对比：https://github.com/${GITHUB_REPOSITORY}/compare/$PREV...$VERSION"
+            fi
+          } > dist/NOTES.md
+
       - name: 创建 Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -54,4 +85,4 @@ jobs:
             "dist/telegram-interactive-bot-$VERSION.zip" \
             "dist/telegram-interactive-bot-$VERSION.tar.gz" \
             "dist/SHA256SUMS" \
-            --title "$VERSION" --generate-notes --verify-tag
+            --title "$VERSION" --notes-file dist/NOTES.md --verify-tag
